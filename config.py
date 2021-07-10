@@ -13,6 +13,6 @@ APP_CONTENTS_CONFIG = {
 }
 
 APP_FONT_CONFIG = {
-    "FONT": ("Arimo", 24),
+    "FONT": ("Arimo", 16),
 
 }
