@@ -60,3 +60,6 @@ class DicomIO:
 
     def get_2d_image(self, slice_: int):
         return self.current_3D[:, :, slice_]
+
+    def hounsfield2grayscale(self):
+        pass

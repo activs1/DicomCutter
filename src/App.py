@@ -30,6 +30,7 @@ class App:
         self.coronal_orientation_checkbox = None
         self.current_folder = None
 
+        self.image_frame = None
         self.canvas = None
         self.imageID = None
         self.image = None
@@ -51,22 +52,27 @@ class App:
 
         self.load_button = tk.Button(self.window, text=cfg.APP_CONTENTS_CONFIG["LOAD_FOLDER_BUTTON"],
                                      font=FONT, bg=cfg.APP_CONTENTS_CONFIG["LOAD_FOLDER_BUTTON_BG"],
-                                     command = self.load_button_on_click)
+                                     command=self.load_button_on_click)
         self.load_button.grid(column=1, row=0)
 
         self.loaded_series_label = tk.Label(self.window, text=cfg.APP_CONTENTS_CONFIG["LOADED_SERIES_LABEL_DEFAULT"],
-                                    font=FONT)
+                                            font=FONT)
         self.loaded_series_label.grid(column=2, row=0)
 
-        self.canvas = tk.Canvas(self.window, width='512', height='512', background='gray')
-        self.default_image_path = r'resources/dicom-not-loaded.png'
+        #####
+        self.image_frame = tk.Frame(self.window)
+        self.canvas = tk.Canvas(self.image_frame, width='512', height='512', background='gray')
+        self.default_image_path = r'../resources/dicom-not-loaded.png'
         self.image = ImageTk.PhotoImage(Image.open(self.default_image_path))
         self.imageID = self.canvas.create_image(256, 256, image=self.image)
-        self.canvas.grid(column=0, row=1)
+        self.canvas.pack(side=tk.LEFT)
         self.canvas.update()
 
-        self.slice_slider = tk.Scale(self.window, from_=100, to=0, orient=tk.VERTICAL, length=400)
-        self.slice_slider.grid(column=1, row=1, sticky=tk.NW)
+        self.slice_slider = tk.Scale(self.image_frame, from_=100, to=0, orient=tk.VERTICAL, length=400,
+                                     command=self.slider_value_changed)
+        self.slice_slider.pack(side=tk.LEFT)
+        self.image_frame.grid(column=0, row=1)
+        #####
 
     def run(self):
 
@@ -77,14 +83,16 @@ class App:
         print(self.current_folder)
 
         self.dcmIO.read_dicom_folder(self.current_folder)
-        print("Series: ", self.dcmIO.number_of_series)
+        self.loaded_folder_label.configure(text=cfg.APP_CONTENTS_CONFIG["LOADED_FOLDER_LABEL_LOADED"] + self.current_folder)
 
         self.dcmIO.current_series = self.dcmIO.series[2]
         self.dcmIO.load_series()
-        img = self.dcmIO.get_2d_image(25)
-        self.update_canvas_image(img)
+        self.slice_slider.configure(from_=self.dcmIO.current_3D.shape[2]-1, to=0)
 
     def update_canvas_image(self, img: np.ndarray):
         img = Image.fromarray(img)
         self.image = ImageTk.PhotoImage(img)
         self.canvas.itemconfigure(self.imageID, image=self.image)
+
+    def slider_value_changed(self, val):
+        self.update_canvas_image(self.dcmIO.get_2d_image(self.slice_slider.get()))
