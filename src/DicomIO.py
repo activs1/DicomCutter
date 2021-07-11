@@ -36,11 +36,14 @@ class DicomIO:
         for dcm in self.dicoms:
             try:
                 descriptions.append(dcm.SeriesInstanceUID)
+                for elem in dcm:
+                    print(elem)
             except Exception:
                 pass
 
         self.series = list(set(descriptions))
         self.number_of_series = len(set(descriptions))
+        print("Series: ", self.number_of_series)
 
     def load_series(self):
         series_dicoms = []
@@ -63,3 +66,9 @@ class DicomIO:
 
     def hounsfield2grayscale(self):
         pass
+
+# class DicomSeries:
+#
+#     def __init__(self, dicom):
+#         self.SeriesInstanceUID = dicom.SeriesInstanceUID
+#         self.StudyDescription
