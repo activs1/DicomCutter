@@ -17,11 +17,13 @@ class App:
     """
 
     def __init__(self):
+        self.ORIENTATION = 'AX'
         self.dicom_loaded = False
 
         self.window = None
         self.dcmIO = DicomIO()
         self.dicom_cutter = DicomCutter()
+        self.dicom_cutter.orig_canvas_size = (512, 512)
         self.roi = ()
 
         self.loaded_folder_label = None
@@ -94,13 +96,19 @@ class App:
         self.slice_slider.pack(side=tk.LEFT)
         self.image_frame.grid(column=1, row=1, rowspan=4, columnspan=3)
 
-        self.axial_orientation_checkbox = tk.Checkbutton(self.window, text='Axial', state=tk.DISABLED)
+        self.axial_orientation_checkbox = tk.Checkbutton(self.window, text='Axial', 
+                                                         state=tk.DISABLED,
+                                                         command=self.axial_orientation_selected)
         self.axial_orientation_checkbox.grid(column=1, row=0)
 
-        self.sagittal_orientation_checkbox = tk.Checkbutton(self.window, text='Sagittal', state=tk.DISABLED)
+        self.sagittal_orientation_checkbox = tk.Checkbutton(self.window, text='Sagittal', 
+                                                            state=tk.DISABLED,
+                                                            command=self.sagittal_orientation_selected)
         self.sagittal_orientation_checkbox.grid(column=2, row=0)
 
-        self.coronal_orientation_checkbox = tk.Checkbutton(self.window, text='Coronal', state=tk.DISABLED)
+        self.coronal_orientation_checkbox = tk.Checkbutton(self.window, text='Coronal', 
+                                                           state=tk.DISABLED,
+                                                           command=self.coronal_orientation_selected)
         self.coronal_orientation_checkbox.grid(column=3, row=0)
         #####
 
@@ -126,18 +134,29 @@ class App:
         self.update_listview()
 
     def update_canvas_image(self, img: np.ndarray):
+        print(img.shape)
         img = Image.fromarray(img)
         self.image = ImageTk.PhotoImage(img)
         self.canvas.itemconfigure(self.imageID, image=self.image)
-        self.canvas.config(width=img.shape[0], height=img.shape[1])
+        self.canvas.configure(width=img.shape[1], height=img.shape[0])
         self.canvas.update()
+        print(self.canvas.width)
+        print(self.canvas.height)
 
     def slider_value_changed(self, val):
         try:
             self.update_canvas_image(self.dcmIO.get_2d_image(self.slice_slider.get()))
         except Exception:
             pass
-
+    
+    def update_slider_values(self):
+        if self.ORIENTATION == 'AX':
+            self.slice_slider.configure(from_=self.dcmIO.current_3D.shape[2] - 1, to=0)
+        elif self.ORIENTATION == 'SAG':
+            self.slice_slider.configure(from_=self.dcmIO.current_3D.shape[0] - 1, to=0)
+        elif self.ORIENTATION == 'COR':
+            self.slice_slider.configure(from_=self.dcmIO.current_3D.shape[1] - 1, to=0)
+    
     def load_series_button_on_click(self):
         selected = self.loaded_series_listview.get(self.loaded_series_listview.curselection()[0])
         print(selected)
@@ -145,10 +164,15 @@ class App:
         self.dcmIO.current_series = selected
         self.dcmIO.load_series()
         self.dicom_cutter.original_3d_image = self.dcmIO.current_3D
-        self.slice_slider.configure(from_=self.dcmIO.current_3D.shape[2] - 1, to=0)
+        self.update_slider_values()
         self.slice_slider.set(0)
         self.slider_value_changed(0)
         self.dicom_loaded = True
+        
+        self.axial_orientation_checkbox.configure(state=tk.NORMAL)
+        self.sagittal_orientation_checkbox.configure(state=tk.NORMAL)
+        self.coronal_orientation_checkbox.configure(state=tk.NORMAL)
+
 
     def update_listview(self):
         for index, series in enumerate(self.dcmIO.series):
@@ -170,4 +194,35 @@ class App:
             cut_image = self.dicom_cutter.cut(self.roi)
             self.dcmIO.cut3D = cut_image
             self.dcmIO.save_cut3D()
-
+            
+            
+    def axial_orientation_selected(self):
+        self.sagittal_orientation_checkbox.deselect()
+        self.coronal_orientation_checkbox.deselect()
+        self.ORIENTATION = 'AX'
+        self.dicom_cutter.cut_plane = self.ORIENTATION
+        self.dcmIO.ORIENTATION = self.ORIENTATION
+        self.update_slider_values()
+        self.slice_slider.set(0)
+        self.slider_value_changed(0)
+    
+    def sagittal_orientation_selected(self):
+        self.axial_orientation_checkbox.deselect()
+        self.coronal_orientation_checkbox.deselect()
+        self.ORIENTATION = 'SAG'
+        self.dcmIO.ORIENTATION = self.ORIENTATION
+        self.dicom_cutter.cut_plane = self.ORIENTATION
+        self.update_slider_values()
+        self.slice_slider.set(0)
+        self.slider_value_changed(0)
+    
+    def coronal_orientation_selected(self):
+        self.axial_orientation_checkbox.deselect()
+        self.sagittal_orientation_checkbox.deselect()
+        self.ORIENTATION = 'COR'
+        self.dcmIO.ORIENTATION = self.ORIENTATION
+        self.dicom_cutter.cut_plane = self.ORIENTATION
+        self.update_slider_values()
+        self.slice_slider.set(0)
+        self.slider_value_changed(0)
+        
