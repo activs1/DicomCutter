@@ -176,7 +176,8 @@ class App:
 
     def update_listview(self):
         for index, series in enumerate(self.dcmIO.series):
-            self.loaded_series_listview.insert(index, series)
+            self.loaded_series_listview.insert(index, "Description: " + str(series.Description) + " " +
+                                                str(series.PatientName) + ": Slices: " + str(series.Slices))
 
     def draw_rect_on_canvas(self):
         x1, y1 = self.points[0]
@@ -205,7 +206,7 @@ class App:
         self.update_slider_values()
         self.slice_slider.set(0)
         self.slider_value_changed(0)
-    
+
     def sagittal_orientation_selected(self):
         self.axial_orientation_checkbox.deselect()
         self.coronal_orientation_checkbox.deselect()
@@ -215,7 +216,7 @@ class App:
         self.update_slider_values()
         self.slice_slider.set(0)
         self.slider_value_changed(0)
-    
+
     def coronal_orientation_selected(self):
         self.axial_orientation_checkbox.deselect()
         self.sagittal_orientation_checkbox.deselect()
