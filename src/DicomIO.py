@@ -10,6 +10,8 @@ from copy import copy
 from src.interpolate import interpolate
 from src.DicomSeries import DicomSeries
 from collections import defaultdict
+from src.utils import hu_to_grayscale
+
 
 class DicomIO:
     """
@@ -36,7 +38,6 @@ class DicomIO:
         for root, dirs, files in os.walk(path):
             for file in files:
                 fname = os.path.join(root, file)
-
                 try:
                     dcm = pd.dcmread(fname)
                     self.dicoms.append(dcm)
@@ -59,26 +60,14 @@ class DicomIO:
         for key in series_dict:
             self.series.append(DicomSeries(series_dict[key]))
 
-
     def load_series(self):
-        series_dicoms = []
-        for dcm in self.dicoms:
-            try:
-                if dcm.SeriesInstanceUID == self.current_series:
-                    series_dicoms.append(dcm)
-                    rows, columns = dcm.Rows, dcm.Columns
-                    print(rows, columns)
-                    print(dcm.PixelSpacing)
-                    print(dcm.SliceThickness)
-                    self.SliceThickness = dcm.SliceThickness
-                    self.PixelSpacing = dcm.PixelSpacing
-            except Exception:
-                pass
-        img = np.zeros((rows, columns, len(series_dicoms)))
+        rows, columns = self.current_series.Rows, self.current_series.Columns
+        img = np.zeros((rows, columns, self.current_series.Slices))
 
-        for index, dcm in enumerate(series_dicoms):
+        for index, dcm in enumerate(self.current_series):
             img[:, :, index] = dcm.pixel_array
-        self.current_3D = interpolate(img, self.SliceThickness, self.PixelSpacing)
+        #self.current_3D = interpolate(img, self.current_series.SliceThickness, self.current_series.PixelSpacing)
+        self.current_3D = hu_to_grayscale(img)
         print(self.current_3D.shape)
 
     def get_2d_image(self, slice_: int):
@@ -90,33 +79,18 @@ class DicomIO:
             return self.current_3D[:, slice_, :]
 
     def save_cut3D(self):
-        dir = askdirectory()
-        basic_series = []
-        for dcm in self.dicoms:
-            try:
-                if dcm.SeriesInstanceUID == self.current_series:
-                    basic_series.append(dcm)
-            except Exception:
-                pass
+        dir_ = askdirectory()
 
         for i in range(0, self.cut3D.shape[2]):
-            series = basic_series[i]
-            series.file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
-            series.SeriesInstanceUID = series.SeriesInstanceUID if ".170798" in series.SeriesInstanceUID else series.SeriesInstanceUID + ".170798"
+            series = self.current_series[i]
+            #series.file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
+            series.SeriesInstanceUID = series.SeriesInstanceUID if ".170798" in series.SeriesInstanceUID \
+                else series.SeriesInstanceUID + ".170798"
             series.PixelData = self.cut3D[:, :, i].reshape(-1).astype(np.uint16).tostring()
             series.Rows = self.cut3D.shape[0]
             series.Columns = self.cut3D.shape[1]
+            series.NumberOfSlices = self.cut3D.shape[2]
             series.PatientName = "DicomCutter Cut"
             series.SamplesPerPixel = 1
-            series.save_as(os.path.join(dir, str(i) + "_cut.dcm"))
+            series.save_as(os.path.join(dir_, str(i) + "_cut.dcm"))
 
-
-
-    def hounsfield2grayscale(self):
-        pass
-
-# class DicomSeries:
-#
-#     def __init__(self, dicom):
-#         self.SeriesInstanceUID = dicom.SeriesInstanceUID
-#         self.StudyDescription

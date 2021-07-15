@@ -139,6 +139,7 @@ class App:
         self.image = ImageTk.PhotoImage(img)
         self.canvas.itemconfigure(self.imageID, image=self.image)
         self.canvas.configure(width=img.shape[1], height=img.shape[0])
+        self.dicom_cutter.orig_canvas_size = (self.canvas.width, self.canvas.height)
         self.canvas.update()
         print(self.canvas.width)
         print(self.canvas.height)
@@ -158,10 +159,10 @@ class App:
             self.slice_slider.configure(from_=self.dcmIO.current_3D.shape[1] - 1, to=0)
     
     def load_series_button_on_click(self):
-        selected = self.loaded_series_listview.get(self.loaded_series_listview.curselection()[0])
+        selected = self.loaded_series_listview.curselection()[0]
         print(selected)
 
-        self.dcmIO.current_series = selected
+        self.dcmIO.current_series = self.dcmIO.series[selected]
         self.dcmIO.load_series()
         self.dicom_cutter.original_3d_image = self.dcmIO.current_3D
         self.update_slider_values()

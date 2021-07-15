@@ -3,11 +3,9 @@ from scipy.ndimage.interpolation import map_coordinates
 
 
 def interpolate(image3d, SliceThickness, PixelSpacing=(1, 1)):
-    dx = image3d.shape[2] / (image3d.shape[2] * SliceThickness)
-
-    x = np.arange(0, image3d.shape[0], 1/PixelSpacing[0])
-    y = np.arange(0, image3d.shape[1], 1/PixelSpacing[1])
-    z = np.arange(0, image3d.shape[2], dx)
+    x = np.arange(0, image3d.shape[0], 1 / PixelSpacing[0])
+    y = np.arange(0, image3d.shape[1], 1 / PixelSpacing[1])
+    z = np.arange(0, image3d.shape[2], 1/ SliceThickness)
 
     xx, yy, zz = np.meshgrid(x, y, z)
 
