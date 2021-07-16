@@ -1,5 +1,3 @@
-
-
 class DicomSeries:
 
     def __init__(self, series):
@@ -10,8 +8,6 @@ class DicomSeries:
         self.Rows, self.Columns = self.SeriesArray[0].Rows, self.SeriesArray[0].Columns
         self.PixelSpacing = self.SeriesArray[0].PixelSpacing
         self.SliceThickness = self.SeriesArray[0].SliceThickness
-        print(self.PixelSpacing)
-        print(self.SliceThickness)
         try:
             self.Description = self.SeriesArray[0].SeriesDescription
         except AttributeError:

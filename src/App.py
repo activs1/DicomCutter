@@ -4,7 +4,6 @@ from PIL import Image, ImageTk
 import src.config as cfg
 from src.DicomIO import DicomIO
 from src.DicomCutter import DicomCutter
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -126,7 +125,6 @@ class App:
 
     def load_button_on_click(self):
         self.current_folder = filedialog.askdirectory()
-        print(self.current_folder)
 
         self.dcmIO.read_dicom_folder(self.current_folder)
         self.loaded_folder_label.configure(text=cfg.APP_CONTENTS_CONFIG["LOADED_FOLDER_LABEL_LOADED"] + self.current_folder)
@@ -134,15 +132,12 @@ class App:
         self.update_listview()
 
     def update_canvas_image(self, img: np.ndarray):
-        print(img.shape)
         img = Image.fromarray(img)
         self.image = ImageTk.PhotoImage(img)
         self.canvas.itemconfigure(self.imageID, image=self.image)
         self.canvas.configure(width=img.shape[1], height=img.shape[0])
         self.dicom_cutter.orig_canvas_size = (self.canvas.width, self.canvas.height)
         self.canvas.update()
-        print(self.canvas.width)
-        print(self.canvas.height)
 
     def slider_value_changed(self, val):
         try:
