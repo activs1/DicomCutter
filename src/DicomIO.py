@@ -1,6 +1,6 @@
 import pydicom as pd
 from pydicom.encaps import  encapsulate
-from pydicom.uid import ExplicitVRLittleEndian
+from pydicom.uid import ExplicitVRLittleEndian, ImplicitVRLittleEndian
 import os
 import numpy as np
 from tkinter.filedialog import askdirectory
@@ -51,13 +51,16 @@ class DicomIO:
         self.create_series(series)
         self.number_of_series = len(self.series)
 
+    def clear_loaded(self):
+        self.dicoms.clear()
+        self.series.clear()
+
     def create_series(self, series_dict):
         for key in series_dict:
             self.series.append(DicomSeries(series_dict[key]))
 
     def load_series(self):
         rows, columns = self.current_series.Rows, self.current_series.Columns
-        print(rows, columns)
         img = np.zeros((rows, columns, self.current_series.Slices))
 
         for index, dcm in enumerate(self.current_series):
@@ -88,7 +91,7 @@ class DicomIO:
         try:
             for i in range(0, self.cut3D.shape[2]):
                 series = self.current_series[i]
-                series.file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
+                series.file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
                 series.SeriesInstanceUID = series.SeriesInstanceUID + "." + unique_id
                 series.PixelData = self.cut3D[:, :, i].reshape(-1).astype(np.uint16).tostring()
                 #series.PixelData.VR = "OW"

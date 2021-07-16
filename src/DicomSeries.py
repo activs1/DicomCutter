@@ -7,7 +7,10 @@ class DicomSeries:
         self.Slices = len(self.SeriesArray)
         self.Rows, self.Columns = self.SeriesArray[0].Rows, self.SeriesArray[0].Columns
         self.PixelSpacing = self.SeriesArray[0].PixelSpacing
-        self.SliceThickness = self.SeriesArray[0].SliceThickness
+        try:
+            self.SliceThickness = self.SeriesArray[0].SliceThickness
+        except AttributeError:
+            self.SliceThickness = 1
         try:
             self.Description = self.SeriesArray[0].SeriesDescription
         except AttributeError:
